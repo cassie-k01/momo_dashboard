@@ -9,4 +9,4 @@ Team Members:
 Link to our scrum Board:
 https://github.com/users/cassie-k01/projects/1/views/1
 
-Link to our architectural diagram:
+Link to our architectural diagram: https://drive.google.com/file/d/1WHxQuUXBqoq7RmPP3MfBzX6NskXR6vUH/view?usp=sharing
