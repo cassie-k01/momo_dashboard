@@ -2,7 +2,7 @@
 MoMo Dashboard is a fullstack application that takes Mobile Money (MoMo) SMS data in XML format, cleans and organizes it, then shows useful charts and tables to help understand transactions. It uses a backend pipeline to process the data and a frontend dashboard to display insights clearly. The system helps users track spending patterns, income sources, and financial trends with ease.
 
 Team Members:
-1.Peter Michaelangelo Rucakibungo
+1. Peter Michael Angelo Rucakibungo
 2. Esther Shimwa
 3. Cassie Keza Kivuye 
 
