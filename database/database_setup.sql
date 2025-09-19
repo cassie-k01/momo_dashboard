@@ -1,33 +1,30 @@
--- ===============================================
--- 1️Drop and create database so i will not neccessarily have to chooses the data base all the time as it will automatically do it
--- ===============================================
 DROP DATABASE IF EXISTS momo_db;
 CREATE DATABASE momo_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE momo_db;
 
---create tables
-CREATE TABLE Users (
+--create the tables and you can create all other tables in tehhe same format
+CREATE TABLE IF NOT EXISTS Users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    phone VARCHAR(20) UNIQUE NOT NULL,
+    phone_number VARCHAR(20) UNIQUE NOT NULL COMMENT 'User phone number',
+    name VARCHAR(100) COMMENT 'User name',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 
-CREATE TABLE sms_Transactions (
+CREATE TABLE IF NOT EXISTS sms_Transactions (
     sms_id INT AUTO_INCREMENT PRIMARY KEY,
     protocol VARCHAR(10),
     address VARCHAR(20),
     date_attr DATETIME,
-    type_attr INT,
+    type_attr VARCHAR(5),
     contact_name VARCHAR(100),
-    body TEXT NOT NULL
+    body TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-
-CREATE TABLE Transactions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    transaction_id VARCHAR(50) UNIQUE NULL,
+--creates the transaction table
+CREATE TABLE IF NOT EXISTS Transactions (
+    transaction_id VARCHAR(50) PRIMARY KEY COMMENT 'Unique Transaction ID',
     amount DECIMAL(15,2) NOT NULL CHECK (amount >= 0),
     transaction_date DATETIME,
     category ENUM(
@@ -38,108 +35,71 @@ CREATE TABLE Transactions (
         'Utility Payment',
         'Withdrawal',
         'Unknown'
-    ) NOT NULL DEFAULT 'Unknown',
-    raw_body TEXT NOT NULL,
+    ) DEFAULT 'Unknown',
+    raw_body TEXT,
     sms_id INT,
     CONSTRAINT fk_sms FOREIGN KEY (sms_id) REFERENCES sms_Transactions(sms_id)
 );
 
-CREATE INDEX idx_transactions_date ON Transactions(transaction_date);
-CREATE INDEX idx_transactions_category ON Transactions(category);
+
+CREATE TABLE IF NOT EXISTS Categorized_Transactions LIKE Transactions;
 
 
-CREATE TABLE Categorized_Transactions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    transaction_id VARCHAR(50) UNIQUE NULL,
-    amount DECIMAL(15,2) NOT NULL CHECK (amount >= 0),
-    transaction_date DATETIME,
-    category ENUM(
-        'Incoming Money',
-        'Payment',
-        'Transfer to Mobile',
-        'Bank Deposit',
-        'Utility Payment',
-        'Withdrawal',
-        'Unknown'
-    ) NOT NULL DEFAULT 'Unknown',
-    raw_body TEXT NOT NULL,
-    sms_id INT,
-    CONSTRAINT fk_sms_cat FOREIGN KEY (sms_id) REFERENCES sms_Transactions(sms_id)
-);
-
-
-CREATE TABLE System_Logs (
+CREATE TABLE IF NOT EXISTS System_Logs (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
     log_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    action VARCHAR(255),
-    description TEXT
+    message TEXT
 );
 
---load xml file ready to insert the datas into the sms_transactins table so it parses it to the other tables
+
+-- Loads the XML into sms_Transactions
 LOAD XML LOCAL INFILE 'C:/Users/HP/Downloads/momo_dashboard-main/momo_dashboard-main/data/modified_sms_v2.xml'
 INTO TABLE sms_Transactions
-ROWS IDENTIFIED BY '<sms>'
-(@protocol, @address, @date_attr, @type_attr, @contact_name, @body)
-SET
-protocol = @protocol,
-address = @address,
-date_attr = STR_TO_DATE(@date_attr, '%Y-%m-%d %H:%i:%s'),
-type_attr = @type_attr,
-contact_name = @contact_name,
-body = @body;
+ROWS IDENTIFIED BY '<sms>';
 
+-- Populates the Users from  unique phone numbers
+INSERT IGNORE INTO Users (phone_number, name)
+SELECT DISTINCT address, contact_name
+FROM sms_Transactions
+WHERE address IS NOT NULL AND TRIM(address) <> '';
 
+-- Populates the  Transactions table safely (fixed)
 INSERT INTO Transactions (transaction_id, amount, transaction_date, category, raw_body, sms_id)
 SELECT
-    NULLIF(
-        TRIM(
-            REPLACE(
-                SUBSTRING(body,
-                    CASE
-                        WHEN LOCATE('TxId:', body) > 0 THEN LOCATE('TxId:', body) + 5
-                        WHEN LOCATE('Financial Transaction Id:', body) > 0 THEN LOCATE('Financial Transaction Id:', body) + 24
-                        ELSE 0
-                    END,
-                    50
-                ),
-                ' ', ''
-            )
-        ), ''
-    ) AS transaction_id,
-    CAST(
-        REPLACE(
-            REPLACE(
-                SUBSTRING(body, 1, LOCATE('RWF', body)-1),
-                ',', ''
-            ),
-            ' ', ''
-        ) AS DECIMAL(15,2)
-    ) AS amount,
-    STR_TO_DATE(
-        SUBSTRING(body, LOCATE('2025-', body), 19),
-        '%Y-%m-%d %H:%i:%s'
-    ) AS transaction_date,
-    CASE
-        WHEN body LIKE '%You have received%' THEN 'Incoming Money'
-        WHEN LOWER(body) LIKE '%your payment of%' AND LOWER(body) LIKE '%to%' THEN 'Payment'
-        WHEN LOWER(body) LIKE '%transferred to%' AND LOWER(body) LIKE '%from%' THEN 'Transfer to Mobile'
-        WHEN LOWER(body) LIKE '%bank deposit%' THEN 'Bank Deposit'
-        WHEN LOWER(body) LIKE '%cash power%' OR LOWER(body) LIKE '%token%' THEN 'Utility Payment'
-        WHEN LOWER(body) LIKE '%withdrawn%' AND LOWER(body) LIKE '%via agent%' THEN 'Withdrawal'
-        ELSE 'Unknown'
-    END AS category,
-    body AS raw_body,
-    sms_id
-FROM sms_Transactions;
+  --this is going to Generate the unique transaction_id so we dont run into primary key errors
+  CASE
+    WHEN body LIKE '%TxId%' AND TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(body, 'TxId:', -1), ' ', 1)) <> '' 
+      THEN TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(body, 'TxId:', -1), ' ', 1))
+    WHEN body LIKE '%Financial Transaction Id%' AND TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(body, 'Financial Transaction Id:', -1), ' ', 1)) <> ''
+      THEN TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(body, 'Financial Transaction Id:', -1), ' ', 1))
+    ELSE CONCAT('AUTO-', sms_id)  -- fallback ensures uniqueness
+  END AS transaction_id,
 
+  --does  Amount parsing
+  CAST(REPLACE(REPLACE(SUBSTRING_INDEX(SUBSTRING_INDEX(body, 'RWF', 1), ' ', -1), ',', ''), ' ', '') AS DECIMAL(15,2)) AS amount,
 
-INSERT INTO Categorized_Transactions (transaction_id, amount, transaction_date, category, raw_body, sms_id)
-SELECT transaction_id, amount, transaction_date, category, raw_body, sms_id
-FROM Transactions;
+  -- does the ransaction date parsing
+  STR_TO_DATE(SUBSTRING(body, LOCATE('2025-', body), 19), '%Y-%m-%d %H:%i:%s') AS transaction_date,
 
+  -- does the Category parsing
+  (CASE
+     WHEN body LIKE '%You have received%' THEN 'Incoming Money'
+     WHEN LOWER(body) LIKE '%your payment of%' AND LOWER(body) LIKE '%to%' THEN 'Payment'
+     WHEN LOWER(body) LIKE '%transferred to%' AND LOWER(body) LIKE '%from%' THEN 'Transfer to Mobile'
+     WHEN LOWER(body) LIKE '%bank deposit%' THEN 'Bank Deposit'
+     WHEN LOWER(body) LIKE '%cash power%' OR LOWER(body) LIKE '%token%' THEN 'Utility Payment'
+     WHEN LOWER(body) LIKE '%withdrawn%' AND LOWER(body) LIKE '%via agent%' THEN 'Withdrawal'
+     ELSE 'Unknown'
+   END) AS category,
 
-INSERT INTO System_Logs (action, description)
-VALUES ('Import XML SMS', 'Imported all raw SMS and processed into Transactions and Categorized_Transactions');
+  body AS raw_body,
+  sms_id
+FROM sms_Transactions
+WHERE TRIM(body) <> '';
 
+--copies the transactions into categorized transactions
+INSERT INTO Categorized_Transactions SELECT * FROM Transactions;
 
+-- Log system import
 
+INSERT INTO System_Logs(message) VALUES('XML import and transaction processing completed.');
