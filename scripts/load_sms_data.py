@@ -6,12 +6,12 @@ import mysql.connector
 tree = ET.parse("../data/modified_sms_v2 (1).xml")
 root = tree.getroot()
 
-# Get all SMS elements
+# Get all SMS elements to avaoid missing enterues
 sms_list = root.findall("sms")
 
 # Define a function to extract data using regex
 def extract_fields(body):
-    # Match both "TxId: ..." and "Financial Transaction Id: ..."
+   
     tx_id_match = re.search(r"TxId[:]? ?(\d+)", body)
     if not tx_id_match:
         tx_id_match = re.search(r"Financial Transaction Id[:]? ?(\d+)", body, re.IGNORECASE)
@@ -43,13 +43,13 @@ def categorize_sms(body):
     # --- Connect to SQLite DB ---
 conn = mysql.connector.connect(
     host="localhost",
-    user="root",       # or your MySQL user
-    password="",       # or your password
+    user="root",       
+    password="",    #personally had a lot of issues and bugs related to the password  
     database="momo_db"
 )
 cursor = conn.cursor()
 
-# --- Create Table ---
+# --Create Table just incase the table isnt of existence
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS transactions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,7 +68,7 @@ for sms in sms_list:
     tx_id, amount, date = extract_fields(body)
     category = categorize_sms(body)
 
-    # Skip if amount or date missing
+    # Skips it if amount or date missing
     if not amount or not date:
         continue
 
@@ -81,4 +81,4 @@ for sms in sms_list:
 conn.commit()
 conn.close()
 
-print(f"\n✅ {inserted} transactions inserted into sms_data.db")
+print(f"\n{inserted} transactions inserted into sms_data.db")
