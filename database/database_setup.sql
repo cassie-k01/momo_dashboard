@@ -1,13 +1,11 @@
 -- ===============================================
--- 1️⃣ Drop and create database
+-- 1️Drop and create database so i will not neccessarily have to chooses the data base all the time as it will automatically do it
 -- ===============================================
 DROP DATABASE IF EXISTS momo_db;
 CREATE DATABASE momo_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE momo_db;
 
--- ===============================================
--- 2️⃣ Users Table
--- ===============================================
+--create tables
 CREATE TABLE Users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -15,9 +13,7 @@ CREATE TABLE Users (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- ===============================================
--- 3️⃣ sms_Transactions Table (raw SMS)
--- ===============================================
+
 CREATE TABLE sms_Transactions (
     sms_id INT AUTO_INCREMENT PRIMARY KEY,
     protocol VARCHAR(10),
@@ -28,9 +24,7 @@ CREATE TABLE sms_Transactions (
     body TEXT NOT NULL
 );
 
--- ===============================================
--- 4️⃣ Transactions Table (processed)
--- ===============================================
+
 CREATE TABLE Transactions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     transaction_id VARCHAR(50) UNIQUE NULL,
@@ -53,9 +47,7 @@ CREATE TABLE Transactions (
 CREATE INDEX idx_transactions_date ON Transactions(transaction_date);
 CREATE INDEX idx_transactions_category ON Transactions(category);
 
--- ===============================================
--- 5️⃣ Categorized_Transactions Table
--- ===============================================
+
 CREATE TABLE Categorized_Transactions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     transaction_id VARCHAR(50) UNIQUE NULL,
@@ -75,9 +67,7 @@ CREATE TABLE Categorized_Transactions (
     CONSTRAINT fk_sms_cat FOREIGN KEY (sms_id) REFERENCES sms_Transactions(sms_id)
 );
 
--- ===============================================
--- 6️⃣ System_Logs Table
--- ===============================================
+
 CREATE TABLE System_Logs (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
     log_time DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -85,10 +75,7 @@ CREATE TABLE System_Logs (
     description TEXT
 );
 
--- ===============================================
--- 7️⃣ Import XML into sms_Transactions
--- ===============================================
--- Replace with your actual XML path
+--load xml file ready to insert the datas into the sms_transactins table so it parses it to the other tables
 LOAD XML LOCAL INFILE 'C:/Users/HP/Downloads/momo_dashboard-main/momo_dashboard-main/data/modified_sms_v2.xml'
 INTO TABLE sms_Transactions
 ROWS IDENTIFIED BY '<sms>'
@@ -101,9 +88,7 @@ type_attr = @type_attr,
 contact_name = @contact_name,
 body = @body;
 
--- ===============================================
--- 8️⃣ Process SMS into Transactions (NULL if no TxId)
--- ===============================================
+
 INSERT INTO Transactions (transaction_id, amount, transaction_date, category, raw_body, sms_id)
 SELECT
     NULLIF(
@@ -147,23 +132,14 @@ SELECT
     sms_id
 FROM sms_Transactions;
 
--- ===============================================
--- 9️⃣ Populate Categorized_Transactions
--- ===============================================
+
 INSERT INTO Categorized_Transactions (transaction_id, amount, transaction_date, category, raw_body, sms_id)
 SELECT transaction_id, amount, transaction_date, category, raw_body, sms_id
 FROM Transactions;
 
--- ===============================================
--- 🔹 Optional: Log the import action
--- ===============================================
+
 INSERT INTO System_Logs (action, description)
 VALUES ('Import XML SMS', 'Imported all raw SMS and processed into Transactions and Categorized_Transactions');
 
--- ===============================================
--- 10️⃣ Verify your data
--- ===============================================
-SELECT COUNT(*) AS total_sms FROM sms_Transactions;
-SELECT COUNT(*) AS total_transactions FROM Transactions;
-SELECT COUNT(*) AS total_categorized FROM Categorized_Transactions;
+
 
