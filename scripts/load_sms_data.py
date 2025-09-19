@@ -1,17 +1,29 @@
 import xml.etree.ElementTree as ET
 import re
+<<<<<<< HEAD
 import sqlite3
+=======
+import mysql.connector
+>>>>>>> a5e39eb01ef6c4dab16fc7e94926a6c5372380b2
 
 # Load and parse my XML file
 tree = ET.parse("../data/modified_sms_v2 (1).xml")
 root = tree.getroot()
 
+<<<<<<< HEAD
 # Get all SMS elements
+=======
+# Get all SMS elements to avaoid missing enterues
+>>>>>>> a5e39eb01ef6c4dab16fc7e94926a6c5372380b2
 sms_list = root.findall("sms")
 
 # Define a function to extract data using regex
 def extract_fields(body):
+<<<<<<< HEAD
     # Match both "TxId: ..." and "Financial Transaction Id: ..."
+=======
+   
+>>>>>>> a5e39eb01ef6c4dab16fc7e94926a6c5372380b2
     tx_id_match = re.search(r"TxId[:]? ?(\d+)", body)
     if not tx_id_match:
         tx_id_match = re.search(r"Financial Transaction Id[:]? ?(\d+)", body, re.IGNORECASE)
@@ -41,10 +53,22 @@ def categorize_sms(body):
     else:
         return "Unknown"
     # --- Connect to SQLite DB ---
+<<<<<<< HEAD
 conn = sqlite3.connect("sms_data.db")
 cursor = conn.cursor()
 
 # --- Create Table ---
+=======
+conn = mysql.connector.connect(
+    host="localhost",
+    user="root",       
+    password="",    #personally had a lot of issues and bugs related to the password  
+    database="momo_db"
+)
+cursor = conn.cursor()
+
+# --Create Table just incase the table isnt of existence
+>>>>>>> a5e39eb01ef6c4dab16fc7e94926a6c5372380b2
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS transactions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -63,7 +87,11 @@ for sms in sms_list:
     tx_id, amount, date = extract_fields(body)
     category = categorize_sms(body)
 
+<<<<<<< HEAD
     # Skip if amount or date missing
+=======
+    # Skips it if amount or date missing
+>>>>>>> a5e39eb01ef6c4dab16fc7e94926a6c5372380b2
     if not amount or not date:
         continue
 
@@ -76,4 +104,8 @@ for sms in sms_list:
 conn.commit()
 conn.close()
 
+<<<<<<< HEAD
 print(f"\n✅ {inserted} transactions inserted into sms_data.db")
+=======
+print(f"\n{inserted} transactions inserted into sms_data.db")
+>>>>>>> a5e39eb01ef6c4dab16fc7e94926a6c5372380b2
