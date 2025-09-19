@@ -1,0 +1,14 @@
+ERD Design Explanation 
+We chose those tables according to the MoMo SMS transaction stuff we need to save. And how 
+the whole system works. First, we have the users table.This has the data on people using the 
+mobile money setup. These are , sender and receiver types. We need it to keep track of who is 
+who in each transaction. Then transactions table. That's the key thing here. It logs all the money 
+movements, like sending money or withdrawing some. With the amount, date it was done, status, 
+all that. Then we added transaction_categories. Basically to tag what the transaction was for. 
+Like buying airtime, paying bills, or withdrawing cash. Makes it easy later when categorizing or 
+sorting them out. Since transactions have more than one individual, sender and receiver and so 
+on, we design user_transaction_role. It links users to transactions. And specifies the role, sender 
+or not. Without this, both sides of storage become complex. Finally, system_logs table. Tracks 
+system activities, data processing, errors occurring. Handy for debugging or verifying if 
+everything went smoothly. The reason as to why we used these is to maintain organized data. 
+Easy to work with. Structured for analysis in the future or inclusion of features
