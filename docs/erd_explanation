@@ -1,16 +1,12 @@
-ERD Design Explanation
+Our ERD attempts to draw the data structure required by the MoMo Dashboard application. Major entities and their association are defined in order to store and process user information, SMS transaction information, categorized transactions, and system logs efficiently.
 
-We chose these tables based on the MoMo SMS transaction data that we need to store and how the entire system operates.
+The Users table holds details about general information such as User ID, Username, Phone Number, and Email-ID. This is for the reason that users are uniquely identified by the program and associated with each transaction and activity.
 
-Users Table: This table stores information about people using the mobile money system, including both senders and receivers. It helps keep track of who is involved in each transaction, ensuring that every transaction can be traced back to the correct individuals.
+Basically, the sms_Transactions table holds raw incoming SMS data, which are SMS ID, SMS message, and date received. These are the point entities for parsing transaction information and processing.
 
-Transactions Table: This is the core table of the system. It logs all money movements, such as sending money, receiving funds, or withdrawals. It records important details like the transaction amount, date, status, and other relevant information.
+The Transactions object is a holder of parsed transaction information, like transaction ID, amount, date, category, and the SMS body in unprocessed form. It is a one-to-many with the Users object because one person may have multiple transactions. It is a one-to-one or a one-to-many with the sms_Transactions object depending on one SMS transaction being equal to one or multiple parsed transactions.
+The Categorized_Transactions table also facilitates transaction categorization with the ability to hold category ID, transaction ID, and category type. This therefore allows the application to report and analyze categorized transactions.
 
-Transaction_Categories Table: This table is used to tag transactions according to their type—such as buying airtime, paying bills, or withdrawing cash. It makes categorizing, sorting, and analyzing transactions easier and more efficient.
+System_Logs further records system action and events-a log ID, action, date, and its details in order to maintain a clean audit trail and aid monitoring and diagnosing the application's activities.
 
-User_Transaction_Role Table: Since transactions involve multiple participants (e.g., sender and receiver), this table links users to transactions and specifies their role. Without this, tracking both sides of a transaction would be complex.
-
-System_Logs Table: This table tracks system activities, data processing steps, and errors that occur during operation. It is essential for debugging, verifying processes, and ensuring the system is working smoothly.
-
-Reasoning Behind the Design:
-These tables are designed to maintain organized and structured data. The design makes it easier to work with the system, ensures traceability of transactions, and supports future analysis or reporting. By clearly separating raw data, structured transactions, user roles, categories, and logs, the system remains efficient, scalable, and easy to maintain.
+The general ERD design is responsible for making the MoMo Dashboard app capable of handling user data, SMS-based transaction management, transaction classification, and system detailing logging in the correct relationship and data integrity.
