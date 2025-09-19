@@ -1,0 +1,10 @@
+{
+  "sms_id": 1001,
+  "sender": "MTN",
+  "receiver": "Alice Johnson",
+  "amount": 2500.00,
+  "currency": "RWF",
+  "transaction_type": "Deposit",
+  "transaction_date": "2025-09-15T10:45:00Z",
+  "raw_message": "You have received 2500 RWF from MTN"
+}

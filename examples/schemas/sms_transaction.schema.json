@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "sms_transaction.schema.json",
+  "title": "SmsTransaction",
+  "type": "object",
+  "properties": {
+    "sms_id": { "type": "integer" },
+    "sender": { "type": "string" },
+    "receiver": { "type": "string" },
+    "amount": { "type": "number", "minimum": 0 },
+    "currency": { "type": "string", "pattern": "^[A-Z]{3,5}$" },
+    "transaction_type": { "type": ["string","null"] },
+    "transaction_date": { "type": ["string","null"], "format": "date-time" },
+    "raw_message": { "type": "string" },
+    "created_at": { "type": ["string","null"], "format": "date-time" }
+  },
+  "required": ["sms_id","sender","receiver","raw_message"],
+  "additionalProperties": false
+}
