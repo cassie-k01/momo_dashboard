@@ -5,6 +5,7 @@ Team Members:
 1. Peter Michael Angelo Rucakibungo
 2. Esther Shimwa
 3. Cassie Keza Kivuye 
+4. Nformi girbong
 
 Link to our scrum Board:
 https://github.com/users/cassie-k01/projects/1/views/1
