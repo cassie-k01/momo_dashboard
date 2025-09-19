@@ -1,0 +1,13 @@
+{
+  "audit_id": 2001,
+  "table_name": "transactions",
+  "record_id": 101,
+  "operation": "INSERT",
+  "changed_at": "2025-09-15T14:25:00Z",
+  "changed_by": "system_admin",
+  "details": {
+    "field": "status",
+    "old_value": "Pending",
+    "new_value": "Success"
+  }
+}
