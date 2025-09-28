@@ -8,8 +8,12 @@ Supports string IDs (like T0001) instead of numeric indexes
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import os
+import base64
+from auth import validate_credentials  # Import the auth module
 
-DATA_FILE = "data/transactions.json"
+# Always use path relative to this project root
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_FILE = os.path.join(BASE_DIR, "data", "transactions.json")
 
 
 def load_data():
@@ -39,8 +43,29 @@ class MyHandler(BaseHTTPRequestHandler):
         if len(parts) == 2 and parts[0] == "transactions":
             return parts[1]  # now returns string IDs like "T0001"
         return None
+    # Basic Authentication
+    def authenticate(self):
+        """Check for valid Basic Auth credentials."""
+        auth_header = self.headers.get("Authorization")
+        if not auth_header:
+            return False
+
+        try:
+            auth_type, credentials = auth_header.split(" ", 1)
+            if auth_type.lower() != "basic":
+                return False
+            decoded = base64.b64decode(credentials).decode()
+            username, password = decoded.split(":", 1)
+            return validate_credentials(username, password)
+        except Exception:
+            return False
+
 
     def do_GET(self):
+        if not self.authenticate():
+            self.send_json(401, {"error": "Unauthorized"})
+            return
+        
         if self.path == "/":
             self.send_json(200, {"message": "API is running"})
 
@@ -64,6 +89,10 @@ class MyHandler(BaseHTTPRequestHandler):
             self.send_json(404, {"error": "Not found"})
 
     def do_POST(self):
+        if not self.authenticate():
+            self.send_json(401, {"error": "Unauthorized"})
+            return
+        
         if self.path == "/transactions":
             content_length = int(self.headers["Content-Length"])
             body = self.rfile.read(content_length)
@@ -88,6 +117,10 @@ class MyHandler(BaseHTTPRequestHandler):
             self.send_json(404, {"error": "Not found"})
 
     def do_PUT(self):
+        if not self.authenticate():
+            self.send_json(401, {"error": "Unauthorized"})
+            return
+        
         if self.path.startswith("/transactions/"):
             transaction_id = self.get_id_from_path()
             if transaction_id is None:
@@ -109,6 +142,10 @@ class MyHandler(BaseHTTPRequestHandler):
             self.send_json(404, {"error": "Not found"})
 
     def do_DELETE(self):
+        if not self.authenticate():
+            self.send_json(401, {"error": "Unauthorized"})
+            return
+        
         if self.path.startswith("/transactions/"):
             transaction_id = self.get_id_from_path()
             if transaction_id is None:
