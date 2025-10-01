@@ -1,24 +1,4 @@
 {
-  "T0001": {
-    "protocol": "0",
-    "address": "M-Money",
-    "date": "1715351458724",
-    "type": "1",
-    "subject": "null",
-    "body": "You have received 2000 RWF from Jane Smith (*********013) on your mobile money account at 2024-05-10 16:30:51. Message from sender: . Your new balance:2000 RWF. Financial Transaction Id: 76662021700.",
-    "toa": "null",
-    "sc_toa": "null",
-    "service_center": "+250788110381",
-    "read": "1",
-    "status": "-1",
-    "locked": "0",
-    "date_sent": "1715351451000",
-    "sub_id": "6",
-    "readable_date": "10 May 2024 4:30:58 PM",
-    "contact_name": "(Unknown)",
-    "amount": 2000,
-    "id": "T0001"
-  },
   "T0002": {
     "protocol": "0",
     "address": "M-Money",
@@ -36,7 +16,7 @@
     "sub_id": "6",
     "readable_date": "10 May 2024 4:31:46 PM",
     "contact_name": "(Unknown)",
-    "amount": 73214484437.0,
+    "amount": 10000,
     "id": "T0002"
   },
   "T0003": {
@@ -33818,5 +33798,11 @@
     "contact_name": "(Unknown)",
     "amount": 37832903831.0,
     "id": "T1691"
+  },
+  "T1693": {
+    "id": "T1693",
+    "amount": 1500,
+    "sender": "Alice",
+    "receiver": "Bob"
   }
 }
